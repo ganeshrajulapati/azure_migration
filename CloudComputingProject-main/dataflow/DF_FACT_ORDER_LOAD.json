@@ -1,0 +1,85 @@
+{
+	"name": "DF_FACT_ORDER_LOAD",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_CSV_SOURCE_VR_GROUP",
+						"type": "DatasetReference"
+					},
+					"name": "OrderCleansedData"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_AZURE_SQL_VRGROUPS",
+						"type": "DatasetReference"
+					},
+					"name": "FactOrderSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivingKeycolumns"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          order_number as integer,",
+				"          order_quantity as short,",
+				"          order_date as string,",
+				"          order_description as string,",
+				"          order_line_number as short,",
+				"          order_shipping_address as string,",
+				"          item_code as integer,",
+				"          Selling_Price as double,",
+				"          Customer_Number as integer,",
+				"          Created_Datetime as timestamp,",
+				"          Order_Description as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> OrderCleansedData",
+				"OrderCleansedData derive(Order_Key = md5(order_number,order_quantity,order_date,OrderCleansedData@order_description,order_line_number,item_code,Selling_Price,Customer_Number),",
+				"          Created_Datetime_new = currentTimestamp(),",
+				"          Updated_Datetime_new = currentTimestamp()) ~> DerivingKeycolumns",
+				"DerivingKeycolumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Product_key as string,",
+				"          Product_number as string,",
+				"          Product_Name as string,",
+				"          Product_Description as string,",
+				"          Product_Price as decimal(18,4),",
+				"          Create_Datetime as timestamp,",
+				"          Update_Datetime as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Order_key = Order_Key,",
+				"          Order_Number = order_number,",
+				"          Order_Quantity = order_quantity,",
+				"          Order_Date = order_date,",
+				"          Order_Description = OrderCleansedData@order_description,",
+				"          Order_Line_Number = order_line_number,",
+				"          Order_Shipping_Address = order_shipping_address,",
+				"          Item_Code = item_code,",
+				"          Selling_Price,",
+				"          Customer_Number,",
+				"          Create_Datetime = Created_Datetime_new,",
+				"          Update_Datetime = Updated_Datetime_new",
+				"     )) ~> FactOrderSink"
+			]
+		}
+	}
+}

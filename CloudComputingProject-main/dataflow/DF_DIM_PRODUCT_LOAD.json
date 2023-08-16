@@ -1,0 +1,74 @@
+{
+	"name": "DF_DIM_PRODUCT_LOAD",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_CSV_SOURCE_VR_GROUP",
+						"type": "DatasetReference"
+					},
+					"name": "ProductCleansedData"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_AZURE_SQL_VRGROUPS",
+						"type": "DatasetReference"
+					},
+					"name": "DimProductSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivingKeycolumns"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Product_Number as string,",
+				"          Product_Name as string,",
+				"          Product_Description as string,",
+				"          Product_Price as double,",
+				"          Created_Datetime as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> ProductCleansedData",
+				"ProductCleansedData derive(Product_Key = md5(Product_Number,Product_Name,Product_Description,Product_Price),",
+				"          Created_Datetime_new = currentTimestamp(),",
+				"          Updated_Datetime_new = currentTimestamp()) ~> DerivingKeycolumns",
+				"DerivingKeycolumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Product_key as string,",
+				"          Product_number as string,",
+				"          Product_Name as string,",
+				"          Product_Description as string,",
+				"          Product_Price as decimal(18,4),",
+				"          Create_Datetime as timestamp,",
+				"          Update_Datetime as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Product_key = Product_Key,",
+				"          Product_number = Product_Number,",
+				"          Product_Name,",
+				"          Product_Description,",
+				"          Product_Price,",
+				"          Create_Datetime = Created_Datetime_new,",
+				"          Update_Datetime = Updated_Datetime_new",
+				"     )) ~> DimProductSink"
+			]
+		}
+	}
+}

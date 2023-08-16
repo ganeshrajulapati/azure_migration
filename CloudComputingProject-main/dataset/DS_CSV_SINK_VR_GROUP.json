@@ -1,0 +1,24 @@
+{
+	"name": "DS_CSV_SINK_VR_GROUP",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_VR_GROUP_ADLS_EXCEL",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "VR_CUSTOMER_CLEANSED_DATA.csv",
+				"fileSystem": "cleanseddata"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

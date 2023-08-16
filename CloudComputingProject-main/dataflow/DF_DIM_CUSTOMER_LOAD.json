@@ -1,0 +1,74 @@
+{
+	"name": "DF_DIM_CUSTOMER_LOAD",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_CSV_SINK_VR_GROUP",
+						"type": "DatasetReference"
+					},
+					"name": "CustomerCleansedData"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_AZURE_SQL_VRGROUPS",
+						"type": "DatasetReference"
+					},
+					"name": "DimCustomerSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivingKeycolumns"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Customer_Number as integer,",
+				"          Customer_Name as string,",
+				"          Shipping_Address as string,",
+				"          Billing_Address as string,",
+				"          Created_Datetime as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> CustomerCleansedData",
+				"CustomerCleansedData derive(Customer_Key = md5(Customer_Number,Customer_Name,Shipping_Address,Billing_Address),",
+				"          Created_Datetime_new = currentTimestamp(),",
+				"          Updated_Datetime_new = currentTimestamp()) ~> DerivingKeycolumns",
+				"DerivingKeycolumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Product_key as string,",
+				"          Product_number as string,",
+				"          Product_Name as string,",
+				"          Product_Description as string,",
+				"          Product_Price as decimal(18,4),",
+				"          Create_Datetime as timestamp,",
+				"          Update_Datetime as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Customer_key = Customer_Key,",
+				"          Customer_Number,",
+				"          Customer_Name,",
+				"          Shipping_Address,",
+				"          Billing_Address,",
+				"          Create_Datetime = Created_Datetime_new,",
+				"          Update_Datetime = Updated_Datetime_new",
+				"     )) ~> DimCustomerSink"
+			]
+		}
+	}
+}

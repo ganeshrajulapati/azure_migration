@@ -1,0 +1,52 @@
+{
+	"name": "DS_AZURE_SQL_VRGROUPS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_AZURE_SQL_VRGROUPS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Product_key",
+				"type": "varchar"
+			},
+			{
+				"name": "Product_number",
+				"type": "varchar"
+			},
+			{
+				"name": "Product_Name",
+				"type": "varchar"
+			},
+			{
+				"name": "Product_Description",
+				"type": "varchar"
+			},
+			{
+				"name": "Product_Price",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 4
+			},
+			{
+				"name": "Create_Datetime",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "Update_Datetime",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Dim_Product"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

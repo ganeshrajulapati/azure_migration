@@ -1,0 +1,65 @@
+{
+	"name": "DF_PRODUCT_VRGROUP",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_CSV_VR_GROUP",
+						"type": "DatasetReference"
+					},
+					"name": "ProductSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_CSV_SINK_VR_GROUP",
+						"type": "DatasetReference"
+					},
+					"name": "ProductCleansedData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "Selectingrequiredcolumns"
+				},
+				{
+					"name": "DerivingColumns"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          {Product Number} as string,",
+				"          {Product Name} as string,",
+				"          {Product Description} as string,",
+				"          {Product Price} as double",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> ProductSource",
+				"ProductSource select(mapColumn(",
+				"          Product_Number = {Product Number},",
+				"          Product_Name = {Product Name},",
+				"          Product_Description = {Product Description},",
+				"          Product_Price = {Product Price}",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> Selectingrequiredcolumns",
+				"Selectingrequiredcolumns derive(Created_Datetime = currentUTC(),",
+				"          Product_Name = iif(isNull(Product_Name),'Data Not Available',Product_Name),",
+				"          Product_Description = iif(isNull(Product_Description),'Data Not Available',Product_Description)) ~> DerivingColumns",
+				"DerivingColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['VR_PROUDUCT_CLEANSED_DATA.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> ProductCleansedData"
+			]
+		}
+	}
+}

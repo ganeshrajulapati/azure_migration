@@ -1,0 +1,51 @@
+{
+	"name": "DS_EXEL_VR_GROUP",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_VR_GROUP_ADLS_EXCEL",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet1",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "VR_Groups_Products_Data.xlsx",
+				"fileSystem": "vrsource"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "Invoice Number",
+				"type": "String"
+			},
+			{
+				"name": "Customer Number",
+				"type": "String"
+			},
+			{
+				"name": "Invoice Date",
+				"type": "String"
+			},
+			{
+				"name": "Item Code",
+				"type": "String"
+			},
+			{
+				"name": "Item Description",
+				"type": "String"
+			},
+			{
+				"name": "Invoice Quantity",
+				"type": "String"
+			},
+			{
+				"name": "Invoice Amount",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

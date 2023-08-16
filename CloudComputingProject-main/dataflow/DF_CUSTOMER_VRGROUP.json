@@ -1,0 +1,65 @@
+{
+	"name": "DF_CUSTOMER_VRGROUP",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_CSV_VR_GROUP",
+						"type": "DatasetReference"
+					},
+					"name": "CustomerSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_CSV_SINK_VR_GROUP",
+						"type": "DatasetReference"
+					},
+					"name": "CustomerCleansedData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "Selectingrequiredcolumns"
+				},
+				{
+					"name": "DerivingColumns"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          customer_number as integer,",
+				"          customer_name as string,",
+				"          shipping_address as string,",
+				"          billing_address as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> CustomerSource",
+				"CustomerSource select(mapColumn(",
+				"          Customer_Number = customer_number,",
+				"          Customer_Name = customer_name,",
+				"          Shipping_Address = shipping_address,",
+				"          Billing_Address = billing_address",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> Selectingrequiredcolumns",
+				"Selectingrequiredcolumns derive(Created_Datetime = currentUTC(),",
+				"          Shipping_Address = iif(isNull(Shipping_Address),'Data Not Available',Shipping_Address),",
+				"          Billing_Address = iif(isNull(Billing_Address),'Data Not Available',Billing_Address)) ~> DerivingColumns",
+				"DerivingColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['VR_CUSTOMER_CLEANSED_DATA.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> CustomerCleansedData"
+			]
+		}
+	}
+}

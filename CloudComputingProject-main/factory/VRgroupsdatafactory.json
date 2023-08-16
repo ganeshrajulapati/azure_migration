@@ -1,0 +1,9 @@
+{
+	"name": "VRgroupsdatafactory",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "3a9e3be8-c7d0-47a3-825d-111cb50d5f81",
+		"tenantId": "442b824c-d028-48fb-9268-7dd6d667d565"
+	}
+}

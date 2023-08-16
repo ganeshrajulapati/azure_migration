@@ -1,0 +1,76 @@
+{
+	"name": "DF_INVOICE_VRGROUP",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_CSV_VR_GROUP",
+						"type": "DatasetReference"
+					},
+					"name": "InvoiceSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_CSV_SINK_VR_GROUP",
+						"type": "DatasetReference"
+					},
+					"name": "InvoiceCleansedData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "Selectingrequiredcolumns"
+				},
+				{
+					"name": "derivedColumn1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          {Invoice Number} as integer,",
+				"          {Customer Number} as integer,",
+				"          {Invoice Date} as date,",
+				"          {Item Code} as integer,",
+				"          {Item Description} as string,",
+				"          {Invoice Quantity} as short,",
+				"          {Net Amount} as double,",
+				"          {Order Number} as integer,",
+				"          {Invoice Status} as string,",
+				"          Product_Id as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> InvoiceSource",
+				"InvoiceSource select(mapColumn(",
+				"          Invoice_Number = {Invoice Number},",
+				"          Customer_Number = {Customer Number},",
+				"          Invoice_Date = {Invoice Date},",
+				"          Item_Code = {Item Code},",
+				"          Item_Description = {Item Description},",
+				"          Invoice_Quantity = {Invoice Quantity},",
+				"          Net_Amount = {Net Amount},",
+				"          Order_Number = {Order Number},",
+				"          Invoice_Status = {Invoice Status},",
+				"          Product_Id",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> Selectingrequiredcolumns",
+				"Selectingrequiredcolumns derive(Created_Datetime = currentUTC(),",
+				"          Item_Description = iif(isNull(Item_Description),'Data Not Available',Item_Description)) ~> derivedColumn1",
+				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['VR_INVOICE_CLEANSED_DATA.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> InvoiceCleansedData"
+			]
+		}
+	}
+}

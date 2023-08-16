@@ -1,0 +1,74 @@
+{
+	"name": "DF_ORDER_VRGROUP",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_CSV_VR_GROUP",
+						"type": "DatasetReference"
+					},
+					"name": "OrderSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_CSV_SINK_VR_GROUP",
+						"type": "DatasetReference"
+					},
+					"name": "OrderCleansedData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "Selectingrequiredcolumns"
+				},
+				{
+					"name": "DerivingColumns"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          order_number as integer,",
+				"          order_quantity as short,",
+				"          order_date as string,",
+				"          order_description as string,",
+				"          order_line_number as short,",
+				"          order_shipping_address as string,",
+				"          item_code as integer,",
+				"          {Selling Price} as double,",
+				"          {Customer Number} as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> OrderSource",
+				"OrderSource select(mapColumn(",
+				"          order_number,",
+				"          order_quantity,",
+				"          order_date,",
+				"          order_description,",
+				"          order_line_number,",
+				"          order_shipping_address,",
+				"          item_code,",
+				"          Selling_Price = {Selling Price},",
+				"          Customer_Number = {Customer Number}",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> Selectingrequiredcolumns",
+				"Selectingrequiredcolumns derive(Created_Datetime = currentUTC(),",
+				"          Order_Description = iif(isNull(order_description),'Data Not Available',order_description)) ~> DerivingColumns",
+				"DerivingColumns sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['VR_ORDER_CLEANSED_DATA.csv'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> OrderCleansedData"
+			]
+		}
+	}
+}

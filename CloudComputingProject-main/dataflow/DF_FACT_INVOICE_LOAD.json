@@ -1,0 +1,86 @@
+{
+	"name": "DF_FACT_INVOICE_LOAD",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_CSV_SINK_VR_GROUP",
+						"type": "DatasetReference"
+					},
+					"name": "InvoiceSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_AZURE_SQL_VRGROUPS",
+						"type": "DatasetReference"
+					},
+					"name": "InvoiceSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DerivingInvoiceKey"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Invoice_Number as integer,",
+				"          Customer_Number as integer,",
+				"          Invoice_Date as date,",
+				"          Item_Code as integer,",
+				"          Item_Description as string,",
+				"          Invoice_Quantity as short,",
+				"          Net_Amount as double,",
+				"          Order_Number as integer,",
+				"          Invoice_Status as string,",
+				"          Product_Id as string,",
+				"          Created_Datetime as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> InvoiceSource",
+				"InvoiceSource derive(Invoice_Key = md5(Invoice_Number,Invoice_Date,Item_Code,Item_Description,Invoice_Quantity,Net_Amount,Invoice_Status,Product_Id,Created_Datetime),",
+				"          Created_Datetime_new = currentTimestamp(),",
+				"          Updated_Datetime_new = currentTimestamp()) ~> DerivingInvoiceKey",
+				"DerivingInvoiceKey sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Product_key as string,",
+				"          Product_number as string,",
+				"          Product_Name as string,",
+				"          Product_Description as string,",
+				"          Product_Price as decimal(18,4),",
+				"          Create_Datetime as timestamp,",
+				"          Update_Datetime as timestamp",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          invoice_key = Invoice_Key,",
+				"          invoice_number = Invoice_Number,",
+				"          customer_number = Customer_Number,",
+				"          Item_code = Item_Code,",
+				"          Item_Description,",
+				"          Invoice_date = Invoice_Date,",
+				"          Net_amount = Net_Amount,",
+				"          Invoice_Quantity,",
+				"          Order_Number,",
+				"          Invoice_status = Invoice_Status,",
+				"          Product_Id,",
+				"          Create_Datetime = Created_Datetime_new,",
+				"          Update_Datetime = Updated_Datetime_new",
+				"     )) ~> InvoiceSink"
+			]
+		}
+	}
+}
